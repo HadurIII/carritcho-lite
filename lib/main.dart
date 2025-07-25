@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
+import 'dart:convert';
 
 void main() => runApp(CarrinhoApp());
 
@@ -22,13 +24,42 @@ class Carrinho {
       itens.fold(0, (s, e) => s + (e.valor * e.quantidade));
   int get quantidadeTotal => itens.fold(0, (s, e) => s + e.quantidade);
   XFile? get imagemCapa => itens.isNotEmpty ? itens.first.imagem : null;
+
+  Map<String, dynamic> toJson() => {
+        'itens': itens.map((e) => e.toJson()).toList(),
+      };
+
+  static Future<Carrinho> fromJson(Map<String, dynamic> json) async {
+    final itens = <ItemCarrinho>[];
+    for (var e in json['itens']) {
+      itens.add(await ItemCarrinho.fromJson(e));
+    }
+    return Carrinho(itens);
+  }
 }
 
 class ItemCarrinho {
   final XFile imagem;
   final int quantidade;
   final double valor;
-  ItemCarrinho(this.imagem, this.quantidade, this.valor);
+  final String? nome;
+  ItemCarrinho(this.imagem, this.quantidade, this.valor, [this.nome]);
+
+  Map<String, dynamic> toJson() => {
+        'imagemPath': imagem.path,
+        'quantidade': quantidade,
+        'valor': valor,
+        'nome': nome,
+      };
+
+  static Future<ItemCarrinho> fromJson(Map<String, dynamic> json) async {
+    return ItemCarrinho(
+      XFile(json['imagemPath']),
+      json['quantidade'],
+      json['valor'],
+      json['nome'],
+    );
+  }
 }
 
 class CarrinhosPage extends StatefulWidget {
@@ -39,6 +70,29 @@ class CarrinhosPage extends StatefulWidget {
 class _CarrinhosPageState extends State<CarrinhosPage> {
   List<Carrinho> carrinhos = [];
 
+  @override
+  void initState() {
+    super.initState();
+    _carregarCarrinhos();
+  }
+
+  Future<void> _carregarCarrinhos() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStrList = prefs.getStringList('carrinhos') ?? [];
+    final lista = <Carrinho>[];
+    for (var s in jsonStrList) {
+      final jsonObj = json.decode(s);
+      lista.add(await Carrinho.fromJson(jsonObj));
+    }
+    setState(() => carrinhos = lista);
+  }
+
+  Future<void> _salvarCarrinhos() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStrList = carrinhos.map((c) => json.encode(c.toJson())).toList();
+    await prefs.setStringList('carrinhos', jsonStrList);
+  }
+
   void _novoCarrinho() {
     Navigator.push(
       context,
@@ -46,6 +100,7 @@ class _CarrinhosPageState extends State<CarrinhosPage> {
         builder: (_) => CarrinhoAtualPage(
           onCarrinhoFinalizado: (carrinho) {
             setState(() => carrinhos.add(carrinho));
+            _salvarCarrinhos();
           },
         ),
       ),
@@ -65,10 +120,16 @@ class _CarrinhosPageState extends State<CarrinhosPage> {
                 carrinhos[index] = novoCarrinho;
               }
             });
+            _salvarCarrinhos();
           },
         ),
       ),
     );
+  }
+
+  void _removerCarrinho(int index) {
+    setState(() => carrinhos.removeAt(index));
+    _salvarCarrinhos();
   }
 
   @override
@@ -89,6 +150,10 @@ class _CarrinhosPageState extends State<CarrinhosPage> {
                   title: Text('${c.quantidadeTotal} itens'),
                   subtitle: Text('R\$ ${c.valorTotal.toStringAsFixed(2)}'),
                   onTap: () => _abrirCarrinho(c),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _removerCarrinho(i),
+                  ),
                 );
               },
             ),
@@ -128,14 +193,19 @@ class _CarrinhoAtualPageState extends State<CarrinhoAtualPage> {
         MaterialPageRoute(
           builder: (_) => CadastroItemPage(
             imagem: foto,
-            onConfirmar: (quantidade, valor) {
-              setState(() => itens.add(ItemCarrinho(foto, quantidade, valor)));
+            onConfirmar: (quantidade, valor, nome) {
+              setState(
+                  () => itens.add(ItemCarrinho(foto, quantidade, valor, nome)));
               Navigator.pop(context);
             },
           ),
         ),
       );
     }
+  }
+
+  void _removerItem(int index) {
+    setState(() => itens.removeAt(index));
   }
 
   @override
@@ -162,8 +232,17 @@ class _CarrinhoAtualPageState extends State<CarrinhoAtualPage> {
                 return ListTile(
                   leading:
                       Image.file(File(item.imagem.path), width: 50, height: 50),
-                  title: Text(
-                      '${item.quantidade}x - R\$ ${item.valor.toStringAsFixed(2)}'),
+                  title: Text(item.nome != null && item.nome!.isNotEmpty
+                      ? '${item.nome}'
+                      : '${item.quantidade}x - R\$ ${item.valor.toStringAsFixed(2)}'),
+                  subtitle: item.nome != null && item.nome!.isNotEmpty
+                      ? Text(
+                          '${item.quantidade}x - R\$ ${item.valor.toStringAsFixed(2)}')
+                      : null,
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _removerItem(i),
+                  ),
                 );
               },
             ),
@@ -177,7 +256,7 @@ class _CarrinhoAtualPageState extends State<CarrinhoAtualPage> {
 
 class CadastroItemPage extends StatefulWidget {
   final XFile imagem;
-  final void Function(int, double) onConfirmar;
+  final void Function(int, double, String?) onConfirmar;
   CadastroItemPage({required this.imagem, required this.onConfirmar});
 
   @override
@@ -189,11 +268,13 @@ class _CadastroItemPageState extends State<CadastroItemPage> {
       TextEditingController(text: '1');
   final TextEditingController _valorController =
       TextEditingController(text: '1.00');
+  final TextEditingController _nomeController = TextEditingController();
 
   @override
   void dispose() {
     _quantidadeController.dispose();
     _valorController.dispose();
+    _nomeController.dispose();
     super.dispose();
   }
 
@@ -235,6 +316,10 @@ class _CadastroItemPageState extends State<CadastroItemPage> {
             Image.file(File(widget.imagem.path),
                 height: 200, fit: BoxFit.cover),
             SizedBox(height: 16),
+            TextField(
+              controller: _nomeController,
+              decoration: InputDecoration(labelText: 'Nome (opcional)'),
+            ),
             Row(
               children: [
                 Expanded(
@@ -273,7 +358,10 @@ class _CadastroItemPageState extends State<CadastroItemPage> {
                 final val = double.tryParse(
                         _valorController.text.replaceAll(',', '.')) ??
                     1.0;
-                widget.onConfirmar(qtd, val);
+                final nome = _nomeController.text.trim().isEmpty
+                    ? null
+                    : _nomeController.text.trim();
+                widget.onConfirmar(qtd, val, nome);
               },
               child: Text('Confirmar'),
             ),
