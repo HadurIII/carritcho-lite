@@ -16,6 +16,7 @@ class CarrinhoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Carrinhos',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.green),
       home: _AppShell(
         home: home,
@@ -43,30 +44,30 @@ class _AppShell extends StatelessWidget {
       body: home,
       floatingActionButton: floatingActionButton,
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Carrinhos'),
-            const SizedBox(width: 10),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.16),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Padding(
+        title: const Text('Carrinhos'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Center(
+              child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(999),
+                ),
                 child: Text(
                   appVersion,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
