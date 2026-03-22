@@ -1,3 +1,5 @@
+// Legacy prototype entrypoint kept for reference only.
+// The current app entrypoint is lib/main.dart.
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
