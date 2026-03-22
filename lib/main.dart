@@ -10,7 +10,7 @@ class CarrinhoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Carrinhossssssss',
+      title: 'Carrinhos',
       theme: ThemeData(primarySwatch: Colors.green),
       home: CarrinhosPage(),
     );
