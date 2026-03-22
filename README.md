@@ -1,19 +1,21 @@
-# CarritchoLite
+# Carritcho Lite
 
-A new Flutter project created with FlutLab - https://flutlab.io
+Protótipo de app Flutter para registrar carrinhos com foto, quantidade e valor.
 
-## Getting Started
+## Estrutura atual
 
-A few resources to get you started if this is your first Flutter project:
+- `lib/main.dart`: entrypoint atual do app.
+- `lib/src/app`: bootstrap do `MaterialApp`.
+- `lib/src/domain`: modelos de domínio.
+- `lib/src/data`: persistência local com `SharedPreferences`.
+- `lib/src/presentation`: páginas, controllers e fluxo de interface.
 
-- https://flutter.dev/docs/get-started/codelab
-- https://flutter.dev/docs/cookbook
+## Execução
 
-For help getting started with Flutter, view our
-https://flutter.dev/docs, which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter run -d edge
+```
 
-## Getting Started: FlutLab - Flutter Online IDE
+## Observação
 
-- How to use FlutLab? Please, view our https://flutlab.io/docs
-- Join the discussion and conversation on https://flutlab.io/residents
+O protótipo ainda usa armazenamento local simples e está sendo organizado em etapas.
