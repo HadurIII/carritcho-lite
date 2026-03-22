@@ -1,23 +1,52 @@
 import 'package:flutter/material.dart';
 
+import 'package:carritcholite/src/app/global_ad_slot.dart';
+
 class CarrinhoApp extends StatelessWidget {
   const CarrinhoApp({
     super.key,
     required this.home,
     this.appVersion = '1.0.0+1',
     this.floatingActionButton,
+    this.adContent,
   });
 
   final Widget home;
   final String appVersion;
   final Widget? floatingActionButton;
+  final Widget? adContent;
 
   @override
   Widget build(BuildContext context) {
+    const adHeight = 72.0;
+
     return MaterialApp(
       title: 'Carrinhos',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.green),
+      builder: (context, child) {
+        return Stack(
+          children: [
+            if (child != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: adHeight),
+                child: child,
+              ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SafeArea(
+                top: false,
+                child: GlobalAdSlot(
+                  height: adHeight,
+                  child: adContent ?? const Text('ANUNCIOS'),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
       home: _AppShell(
         home: home,
         appVersion: appVersion,
@@ -57,9 +86,9 @@ class _AppShell extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  appVersion,
+                  'v$appVersion',
                   style: const TextStyle(
-                    color: Colors.green,
+                    color: Colors.black,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
