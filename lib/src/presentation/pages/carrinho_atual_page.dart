@@ -19,11 +19,21 @@ class CarrinhoAtualPage extends StatefulWidget {
 
 class _CarrinhoAtualPageState extends State<CarrinhoAtualPage> {
   late List<ItemCarrinho> itens;
+  late String nomeCarrinho;
+  final TextEditingController _nomeController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     itens = List<ItemCarrinho>.from(widget.carrinhoExistente?.itens ?? []);
+    nomeCarrinho = widget.carrinhoExistente?.nome ?? 'Novo carrinho';
+    _nomeController.text = nomeCarrinho;
+  }
+
+  @override
+  void dispose() {
+    _nomeController.dispose();
+    super.dispose();
   }
 
   void _tirarFoto() async {
@@ -46,6 +56,49 @@ class _CarrinhoAtualPageState extends State<CarrinhoAtualPage> {
     }
   }
 
+  Future<void> _editarNomeCarrinho() async {
+    _nomeController.text = nomeCarrinho;
+
+    final novoNome = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Editar nome do carrinho'),
+          content: TextField(
+            controller: _nomeController,
+            autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              labelText: 'Nome do carrinho',
+            ),
+            onSubmitted: (_) {
+              Navigator.of(dialogContext).pop(_nomeController.text.trim());
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(_nomeController.text.trim()),
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (novoNome == null || novoNome.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      nomeCarrinho = novoNome;
+      _nomeController.text = novoNome;
+    });
+  }
+
   void _removerItem(int index) {
     setState(() => itens.removeAt(index));
   }
@@ -54,12 +107,17 @@ class _CarrinhoAtualPageState extends State<CarrinhoAtualPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Carrinho Atual'),
+        title: GestureDetector(
+          onTap: _editarNomeCarrinho,
+          child: Text(nomeCarrinho),
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.check),
             onPressed: () {
-              widget.onCarrinhoFinalizado(Carrinho(itens));
+              widget.onCarrinhoFinalizado(
+                Carrinho(nomeCarrinho, List<ItemCarrinho>.from(itens)),
+              );
               Navigator.pop(context);
             },
           )

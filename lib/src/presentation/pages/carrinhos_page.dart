@@ -68,21 +68,26 @@ class CarrinhosPageState extends State<CarrinhosPage> {
         final carrinhos = _controller.carrinhos;
 
         return carrinhos.isEmpty
-            ? Center(child: Text('Nenhum carrinho ainda.'))
+            ? const Center(child: Text('Nenhum carrinho ainda.'))
             : ListView.builder(
                 itemCount: carrinhos.length,
                 itemBuilder: (_, i) {
                   final c = carrinhos[i];
                   return ListTile(
                     leading: c.imagemCapa != null
-                        ? Image.file(File(c.imagemCapa!.path),
-                            width: 50, height: 50)
+                        ? Image.file(
+                            File(c.imagemCapa!.path),
+                            width: 50,
+                            height: 50,
+                          )
                         : null,
-                    title: Text('${c.quantidadeTotal} itens'),
-                    subtitle: Text('R\$ ${c.valorTotal.toStringAsFixed(2)}'),
+                    title: Text(c.nome),
+                    subtitle: Text(
+                      '${c.quantidadeTotal} itens - R\$ ${c.valorTotal.toStringAsFixed(2)}',
+                    ),
                     onTap: () => _abrirCarrinho(c),
                     trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
+                      icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () => _removerCarrinho(i),
                     ),
                   );
