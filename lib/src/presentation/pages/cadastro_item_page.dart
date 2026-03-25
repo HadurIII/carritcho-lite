@@ -57,14 +57,24 @@ class _CadastroItemPageState extends State<CadastroItemPage> {
 
   @override
   Widget build(BuildContext context) {
+    final imagemFile = File(widget.imagem.path);
+    final imagemExiste = imagemFile.existsSync();
+
     return Scaffold(
       appBar: AppBar(title: Text('Cadastro do Item')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Image.file(File(widget.imagem.path),
-                height: 200, fit: BoxFit.cover),
+            imagemExiste
+                ? Image.file(
+                    imagemFile,
+                    height: 200,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        _buildImagemPlaceholder(200),
+                  )
+                : _buildImagemPlaceholder(200),
             SizedBox(height: 16),
             TextField(
               controller: _nomeController,
@@ -118,6 +128,15 @@ class _CadastroItemPageState extends State<CadastroItemPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildImagemPlaceholder(double size) {
+    return Container(
+      height: size,
+      width: double.infinity,
+      color: Colors.grey.shade200,
+      child: const Icon(Icons.image_not_supported, size: 32),
     );
   }
 }

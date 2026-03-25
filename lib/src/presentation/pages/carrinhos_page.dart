@@ -73,13 +73,27 @@ class CarrinhosPageState extends State<CarrinhosPage> {
                 itemCount: carrinhos.length,
                 itemBuilder: (_, i) {
                   final c = carrinhos[i];
+                  final imagem = c.imagemCapa;
+                  final imagemFile =
+                      imagem != null ? File(imagem.path) : null;
+                  final imagemExiste =
+                      imagemFile != null && imagemFile.existsSync();
                   return ListTile(
-                    leading: c.imagemCapa != null
-                        ? Image.file(File(c.imagemCapa!.path),
-                            width: 50, height: 50)
-                        : null,
-                    title: Text('${c.quantidadeTotal} itens'),
-                    subtitle: Text('R\$ ${c.valorTotal.toStringAsFixed(2)}'),
+                    leading: imagemExiste
+                        ? Image.file(
+                            imagemFile!,
+                            width: 50,
+                            height: 50,
+                            errorBuilder: (_, __, ___) =>
+                                _buildImagemPlaceholder(50),
+                          )
+                        : (imagem != null
+                            ? _buildImagemPlaceholder(50)
+                            : null),
+                    title: Text(c.nome),
+                    subtitle: Text(
+                      '${c.quantidadeTotal} itens - R\$ ${c.valorTotal.toStringAsFixed(2)}',
+                    ),
                     onTap: () => _abrirCarrinho(c),
                     trailing: IconButton(
                       icon: Icon(Icons.delete, color: Colors.red),
@@ -89,6 +103,15 @@ class CarrinhosPageState extends State<CarrinhosPage> {
                 },
               );
       },
+    );
+  }
+
+  Widget _buildImagemPlaceholder(double size) {
+    return Container(
+      width: size,
+      height: size,
+      color: Colors.grey.shade200,
+      child: const Icon(Icons.image_not_supported, size: 20),
     );
   }
 }
